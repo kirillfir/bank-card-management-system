@@ -2,12 +2,12 @@ package com.example.bankcards.dto;
 
 import java.math.BigDecimal;
 
-public class TransferRequestDTO {
+public class TransferRequest {
     private Long fromCardId;
     private Long toCardId;
     private BigDecimal amount;
 
-    public TransferRequestDTO() {}
+    public TransferRequest() {}
 
     // Геторы
     public Long getFromCardId() { return fromCardId; }

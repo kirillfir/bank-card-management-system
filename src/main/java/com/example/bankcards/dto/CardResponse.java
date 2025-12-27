@@ -3,7 +3,7 @@ package com.example.bankcards.dto;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public class CardResponseDTO {
+public class CardResponse {
     private Long id;
     private String maskedNumber;
     private String ownerName;
@@ -11,7 +11,7 @@ public class CardResponseDTO {
     private String status;
     private BigDecimal balance;
 
-    public CardResponseDTO() {}
+    public CardResponse() {}
 
     // Гетеры
     public Long getId() { return id; }
