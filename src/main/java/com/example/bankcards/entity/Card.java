@@ -13,8 +13,18 @@ public class Card {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * Здесь хранится ЗАШИФРОВАННЫЙ номер (ciphertext).
+     * Его нельзя отдавать наружу.
+     */
     @Column(name = "card_number", nullable = false, unique = true)
-    private String cardNumber; // Здесь будет храниться зашифрованный номер
+    private String cardNumber;
+
+    /**
+     * Последние 4 цифры в открытом виде, чтобы делать маску.
+     */
+    @Column(name = "last4", nullable = false, length = 4)
+    private String last4;
 
     @Column(name = "owner_name", nullable = false)
     private String ownerName;
@@ -23,39 +33,37 @@ public class Card {
     private LocalDate expiryDate;
 
     @Column(nullable = false)
-    private String status; // Мы будем хранить статус: ACTIVE, BLOCKED, EXPIRED
+    private String status; // ACTIVE, BLOCKED, EXPIRED
 
     @Column(nullable = false)
     private BigDecimal balance;
 
-    // Связь с пользователем: много карт могут принадлежать одному юзеру
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
-    // Пустой конструктор для JPA
-    public Card() {
-    }
+    public Card() {}
 
-    // Геттеры
+    // --- getters ---
     public Long getId() { return id; }
     public String getCardNumber() { return cardNumber; }
+    public String getLast4() { return last4; }
     public String getOwnerName() { return ownerName; }
     public LocalDate getExpiryDate() { return expiryDate; }
     public String getStatus() { return status; }
     public BigDecimal getBalance() { return balance; }
     public User getUser() { return user; }
 
-    // Сеттеры
+    // --- setters ---
     public void setId(Long id) { this.id = id; }
     public void setCardNumber(String cardNumber) { this.cardNumber = cardNumber; }
+    public void setLast4(String last4) { this.last4 = last4; }
     public void setOwnerName(String ownerName) { this.ownerName = ownerName; }
     public void setExpiryDate(LocalDate expiryDate) { this.expiryDate = expiryDate; }
     public void setStatus(String status) { this.status = status; }
     public void setBalance(BigDecimal balance) { this.balance = balance; }
     public void setUser(User user) { this.user = user; }
 
-    // Equals и HashCode (сравниваем по ID и уникальному номеру карты)
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

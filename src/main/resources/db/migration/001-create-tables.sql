@@ -22,6 +22,7 @@ CREATE TABLE users (
 CREATE TABLE cards (
     id BIGSERIAL PRIMARY KEY,
     card_number VARCHAR(255) NOT NULL UNIQUE,
+    last4 VARCHAR(4) NOT NULL,
     owner_name VARCHAR(255) NOT NULL,
     expiry_date DATE NOT NULL,
     status VARCHAR(50) NOT NULL,
@@ -29,6 +30,7 @@ CREATE TABLE cards (
     user_id BIGINT,
     CONSTRAINT fk_cards_users FOREIGN KEY (user_id) REFERENCES users (id)
 );
+
 
 -- changeset kuznetsov:4
 -- 4. Сразу добавим дефолтные роли, чтобы потом не делать это вручную
@@ -38,7 +40,7 @@ INSERT INTO roles (name) VALUES ('ROLE_ADMIN');
 -- changeset kuznetsov:5
 -- Добавляем администратора вручную (логин: admin, пароль: password123)
 INSERT INTO users (username, password, role_id)
-VALUES ('admin', '$2a$10$76itSclH8.MvYI/v.AAnx.mP5v0fH9097CHrE3n8R4R.8k6p1xSj2',
+VALUES ('admin', '$2a$10$SvcLxRPUUn6PJ6M5vEwuV.krDkAwNc.bW63VmuCVtj3mJ8drKpsFG',
        (SELECT id FROM roles WHERE name = 'ROLE_ADMIN'));
 
 -- changeset kuznetsov:6
