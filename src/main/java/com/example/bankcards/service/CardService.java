@@ -36,10 +36,17 @@ public class CardService {
     // ADMIN логика
     // -----------------------
 
+    /**
+     * Создание карты с опциональным стартовым балансом.
+     */
     @Transactional
-    public Card createCardForUser(Long userId) {
+    public Card createCardForUser(Long userId, BigDecimal initialBalance) {
         User owner = userRepository.findById(userId)
                 .orElseThrow(() -> new BankException("Пользователь для привязки карты не найден"));
+
+        if (initialBalance != null && initialBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BankException("Начальный баланс не может быть отрицательным");
+        }
 
         Card card = new Card();
 
@@ -50,15 +57,26 @@ public class CardService {
         card.setUser(owner);
         card.setOwnerName(owner.getUsername());
         card.setExpiryDate(LocalDate.now().plusYears(5));
-        card.setBalance(BigDecimal.ZERO);
+        card.setBalance(initialBalance == null ? BigDecimal.ZERO : initialBalance);
         card.setStatus("ACTIVE");
 
         return cardRepository.save(card);
     }
 
+    /**
+     * DEV/TEST: вручную установить баланс (только ADMIN через контроллер).
+     */
     @Transactional
-    public CardResponse createCardForUserDto(Long userId) {
-        return toResponse(createCardForUser(userId));
+    public void setBalance(Long cardId, BigDecimal balance) {
+        if (balance == null || balance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BankException("Баланс должен быть >= 0");
+        }
+
+        Card card = cardRepository.findById(cardId)
+                .orElseThrow(() -> new BankException("Карта не найдена"));
+
+        card.setBalance(balance);
+        cardRepository.save(card);
     }
 
     @Transactional
@@ -98,9 +116,15 @@ public class CardService {
 
     @Transactional
     public void transferBetweenOwnCards(Long fromId, Long toId, BigDecimal amount, User user) {
-        log.info("Пользователь ID: {} инициировал перевод. С карты {} на карту {} сумма {}",
-                user.getId(), fromId, toId, amount);
+        log.info("Пользователь {} инициировал перевод: from={} to={} amount={}",
+                user.getUsername(), fromId, toId, amount);
 
+        if (fromId == null || toId == null) {
+            throw new BankException("fromCardId и toCardId обязательны");
+        }
+        if (fromId.equals(toId)) {
+            throw new BankException("Нельзя переводить на ту же самую карту");
+        }
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new BankException("Сумма перевода должна быть больше 0");
         }
@@ -110,17 +134,30 @@ public class CardService {
         Card toCard = cardRepository.findById(toId)
                 .orElseThrow(() -> new BankException("Карта получателя не найдена"));
 
+        // Только свои карты
         if (!fromCard.getUser().getId().equals(user.getId()) || !toCard.getUser().getId().equals(user.getId())) {
-            log.warn("ПОДОЗРИТЕЛЬНАЯ АКТИВНОСТЬ: Пользователь {} пытался перевести деньги между чужими картами", user.getId());
             throw new BankException("Обе карты должны принадлежать вам");
         }
 
-        if (!"ACTIVE".equals(fromCard.getStatus()) || !"ACTIVE".equals(toCard.getStatus())) {
+        // Проверяем срок действия по expiry_date
+        if (fromCard.getExpiryDate().isBefore(java.time.LocalDate.now())) {
+            throw new BankException("Карта отправителя просрочена");
+        }
+        if (toCard.getExpiryDate().isBefore(java.time.LocalDate.now())) {
+            throw new BankException("Карта получателя просрочена");
+        }
+
+        // Только ACTIVE
+        String fromStatus = fromCard.getStatus() == null ? "" : fromCard.getStatus().trim();
+        String toStatus = toCard.getStatus() == null ? "" : toCard.getStatus().trim();
+
+        if (!"ACTIVE".equalsIgnoreCase(fromStatus) || !"ACTIVE".equalsIgnoreCase(toStatus)) {
             throw new BankException("Переводы возможны только между активными картами");
         }
 
+
+        // Баланс
         if (fromCard.getBalance().compareTo(amount) < 0) {
-            log.info("Отказ в переводе: недостаточно средств на карте {}", fromId);
             throw new BankException("Недостаточно средств для перевода");
         }
 
@@ -130,8 +167,9 @@ public class CardService {
         cardRepository.save(fromCard);
         cardRepository.save(toCard);
 
-        log.info("УСПЕХ: Перевод выполнен. С карты {} на карту {} списано {}", fromId, toId, amount);
+        log.info("Перевод успешен: from={} to={} amount={}", fromId, toId, amount);
     }
+
 
     // -----------------------
     // DTO mapping
