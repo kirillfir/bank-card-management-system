@@ -1,6 +1,5 @@
 # Maven
-/target/
-*.class
+target/
 
 # IntelliJ IDEA
 .idea/
@@ -8,3 +7,6 @@
 
 # Logs
 *.log
+
+# OS
+.DS_Store

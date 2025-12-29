@@ -15,7 +15,6 @@ public class Card {
 
     /**
      * Здесь хранится ЗАШИФРОВАННЫЙ номер (ciphertext).
-     * Его нельзя отдавать наружу.
      */
     @Column(name = "card_number", nullable = false, unique = true)
     private String cardNumber;
@@ -44,7 +43,7 @@ public class Card {
 
     public Card() {}
 
-    // --- getters ---
+    // гетеры
     public Long getId() { return id; }
     public String getCardNumber() { return cardNumber; }
     public String getLast4() { return last4; }
@@ -54,7 +53,7 @@ public class Card {
     public BigDecimal getBalance() { return balance; }
     public User getUser() { return user; }
 
-    // --- setters ---
+    // сетеры
     public void setId(Long id) { this.id = id; }
     public void setCardNumber(String cardNumber) { this.cardNumber = cardNumber; }
     public void setLast4(String last4) { this.last4 = last4; }

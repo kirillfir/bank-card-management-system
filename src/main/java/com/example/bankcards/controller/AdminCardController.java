@@ -36,7 +36,6 @@ public class AdminCardController {
 
     /**
      * DEV/TEST endpoint: установить баланс карты вручную (только ADMIN).
-     * Удобно для тестирования переводов.
      */
     @PatchMapping("/{cardId}/balance")
     public ResponseEntity<Void> setBalance(
